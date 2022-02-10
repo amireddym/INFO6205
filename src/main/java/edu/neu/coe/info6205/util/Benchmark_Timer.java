@@ -4,6 +4,11 @@
 
 package edu.neu.coe.info6205.util;
 
+import edu.neu.coe.info6205.graphs.BFS_and_prims.StdRandom;
+import edu.neu.coe.info6205.sort.elementary.InsertionSort;
+
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -125,4 +130,81 @@ public class Benchmark_Timer<T> implements Benchmark<T> {
     private final Consumer<T> fPost;
 
     final static LazyLogger logger = new LazyLogger(Benchmark_Timer.class);
+
+    public static void main(String[] args) {
+
+        int noOfTimes=50;
+        int startingLength=100;
+        int MAX=20000;
+        InsertionSort<Integer> insertSort=new InsertionSort<Integer>();
+        Consumer<Integer[]> consumer=array->insertSort.sort(array, 0, array.length);
+        Benchmark_Timer<Integer[]> benchmarkTimer = new Benchmark_Timer<Integer[]>("Insertion Sort", consumer);
+
+        System.out.println("RANDOMLY ORDERED ARRAY ---- INSERTION SORT");
+
+        // Doubling method used for arraySize
+        for (int i = startingLength; i < 20000; i += i) {
+            int doubledLength=i;
+            Supplier<Integer[]> supplier = () -> {
+                Integer[] a = new Integer[doubledLength];
+                for (int j = 0; j < doubledLength; j++)
+                    a[j] = StdRandom.uniform(-MAX, MAX);
+                return a;
+            };
+            System.out.println("N= " + doubledLength +", Mean Time Taken for Sorting: " + benchmarkTimer.runFromSupplier(supplier, noOfTimes));
+        }
+
+        System.out.print("\n");
+        System.out.println("ORDERED ARRAY ---- INSERTION SORT");
+
+        for (int i = startingLength; i < 20000; i += i) {
+            int doubledLength=i;
+
+            Supplier<Integer[]> supplier = () -> {
+                Integer[] a = new Integer[doubledLength];
+                for (int j = 0; j < doubledLength; j++)
+                    a[j] = StdRandom.uniform(-MAX, MAX);
+                //Sorting this prior and giving it for supplier
+                Arrays.sort(a);
+                return a;
+            };
+
+            System.out.println("N= " + doubledLength +", Mean Time Taken for Sorting: " + benchmarkTimer.runFromSupplier(supplier, noOfTimes));
+        }
+
+        System.out.print("\n");
+        System.out.println("PARTIALLY ORDERED ARRAY ---- INSERTION SORT");
+
+        for (int i = startingLength; i < 20000; i += i) {
+            int doubledLength=i;
+            Supplier<Integer[]> supplier = () -> {
+                Integer[] a = new Integer[doubledLength];
+                for (int j = 0; j < doubledLength; j++)
+                    a[j] = StdRandom.uniform(-MAX, MAX);
+
+                Arrays.sort(a);
+                for (int j = 0; j < doubledLength/2; j++)
+                    a[j] = StdRandom.uniform(-MAX, MAX);
+
+                return a;
+            };
+            System.out.println("N= " + doubledLength +", Mean Time Taken for Sorting: " + benchmarkTimer.runFromSupplier(supplier, noOfTimes));
+        }
+
+        System.out.print("\n");
+        System.out.println("REVERSE ORDERED ARRAY ---- INSERTION SORT");
+
+        for (int i = startingLength; i < 20000; i += i) {
+            int doubledLength=i;
+            Supplier<Integer[]> supplier = () -> {
+                Integer[] a = new Integer[doubledLength];
+                for (int j = 0; j < doubledLength; j++)
+                    a[j] = StdRandom.uniform(-MAX, MAX);
+                Arrays.sort(a, Collections.reverseOrder());
+                return a;
+            };
+            System.out.println("N= " + doubledLength +", Mean Time Taken for Sorting: " + benchmarkTimer.runFromSupplier(supplier, noOfTimes));
+        }
+    }
+
 }
