@@ -17,44 +17,66 @@ import java.util.concurrent.ForkJoinPool;
 public class Main {
 
     public static void main(String[] args) {
+
+        int threadsCount = 2;
+        int arraySize = 50000;
+        int cutOff = 5000;
+        // Changing the threads and sizes for computing avg times for sorting
         processArgs(args);
-        System.out.println("Degree of parallelism: " + ForkJoinPool.getCommonPoolParallelism());
-        Random random = new Random();
-        int[] array = new int[2000000];
-        ArrayList<Long> timeList = new ArrayList<>();
-        for (int j = 50; j < 100; j++) {
-            ParSort.cutoff = 10000 * (j + 1);
-            // for (int i = 0; i < array.length; i++) array[i] = random.nextInt(10000000);
-            long time;
-            long startTime = System.currentTimeMillis();
-            for (int t = 0; t < 10; t++) {
-                for (int i = 0; i < array.length; i++) array[i] = random.nextInt(10000000);
-                ParSort.sort(array, 0, array.length);
+        for(int i=1; i<6; i++) {
+
+            for (int tc=1; tc<6; tc++) {
+
+                System.out.println("Size of the Array ::: " + arraySize);
+                ForkJoinPool pool = new ForkJoinPool(threadsCount);
+                System.out.println("Current pool of threads ::: " + threadsCount);
+                Random random = new Random();
+                int[] array = new int[arraySize];
+                ArrayList<Long> timeList = new ArrayList<>();
+
+                for (int j = 1; j < arraySize/cutOff+1; j++) {
+
+                    ParSort.cutoff = cutOff * j;
+                    long timeTaken;
+                    long startTime = System.currentTimeMillis();
+                    for (int t = 0; t < 10; t++) {
+                        for (int k = 0; k < array.length; k++) {
+                            array[k] = random.nextInt(10000000);
+                        }
+                        ParSort.sort(array, 0, array.length, pool);
+                    }
+                    long endTime = System.currentTimeMillis();
+                    timeTaken = endTime - startTime;
+                    timeList.add(timeTaken);
+                    System.out.println("Cutoff used ::: " + ParSort.cutoff + " , and time for 10 samples ::: " + timeTaken);
+                }
+
+                try{
+
+                    FileOutputStream fileOutputStream = new FileOutputStream("./src/"+"arraySize-"+arraySize+"-thread"+threadsCount+".csv");
+                    OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+                    BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
+                    for(int index=0; index<timeList.size(); index++) {
+                        StringBuilder stringBuilder = new StringBuilder();
+                        stringBuilder.append(cutOff*(index+1));
+                        stringBuilder.append(",");
+                        stringBuilder.append((double) timeList.get(index)/10);
+                        stringBuilder.append("\n");
+                        bufferedWriter.write(stringBuilder.toString());
+                        bufferedWriter.flush();
+                    }
+                    bufferedWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                threadsCount *= 2;
             }
-            long endTime = System.currentTimeMillis();
-            time = (endTime - startTime);
-            timeList.add(time);
-
-
-            System.out.println("cutoff：" + (ParSort.cutoff) + "\t\t10times Time:" + time + "ms");
+            threadsCount = 2;
+            arraySize*=2;
 
         }
-        try {
-            FileOutputStream fis = new FileOutputStream("./src/result.csv");
-            OutputStreamWriter isr = new OutputStreamWriter(fis);
-            BufferedWriter bw = new BufferedWriter(isr);
-            int j = 0;
-            for (long i : timeList) {
-                String content = (double) 10000 * (j + 1) / 2000000 + "," + (double) i / 10 + "\n";
-                j++;
-                bw.write(content);
-                bw.flush();
-            }
-            bw.close();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private static void processArgs(String[] args) {
